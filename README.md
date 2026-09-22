@@ -74,14 +74,28 @@ uv run python scripts/smoke_test.py
 
 ## Amazon SageMaker AI
 
-`sagemaker/` 提供实时端点所需的自定义容器适配：
+`sagemaker/` 提供实时端点所需的自定义容器和部署工具：
 
 - `serve.py`：监听 8080 端口，提供 `/ping` 和 `/invocations`；
 - `Dockerfile`：构建 `linux/amd64` CPU 推理镜像；
-- `prepare_model.py`：把 Hugging Face checkpoint 准备到容器构建目录；
+- `prepare_model.py`：下载 checkpoint 并准备容器构建目录；
+- `manage.sh`：完成部署、调用、日志查看和资源清理；
+- `request.json`：可直接调用 Endpoint 的中文样例；
 - `validation-report.md`：记录 `ml.m5.xlarge` 端点的验证结果和 CloudWatch 指标。
 
-模型权重、临时压缩包和本地缓存不会提交到 Git。部署过程与验证结果见 [Laya 部署实践](docs/aws-blog/laya-aws-blog.md)。
+最短部署流程需要一个现有的 SageMaker 执行角色：
+
+```bash
+export AWS_PROFILE=<profile-name>                 # 使用默认凭证链时可省略
+export AWS_REGION=us-west-2
+export SAGEMAKER_ROLE_ARN=arn:aws:iam::<account-id>:role/<sagemaker-role>
+
+./sagemaker/manage.sh deploy
+./sagemaker/manage.sh invoke
+./sagemaker/manage.sh cleanup
+```
+
+角色权限、状态检查、CloudWatch 日志和本地容器测试见 [`sagemaker/README.md`](sagemaker/README.md)。模型权重、部署状态、临时压缩包和本地缓存不会提交到 Git。实测结果见 [Laya 部署实践](docs/aws-blog/laya-aws-blog.md)。
 
 ## 配置
 

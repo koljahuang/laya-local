@@ -1,4 +1,4 @@
-# Laya 非自回归决策服务：本地验证与 Amazon SageMaker AI 部署实践 [SELF HOST "Jev"]
+# Laya 非自回归决策服务：本地验证与 Amazon SageMaker AI 部署实践
 
 **关键词：** Laya、Jev、typed decision、非自回归模型、FastAPI、Amazon SageMaker AI、模型推理
 
@@ -8,7 +8,7 @@ Laya multilingual checkpoint 可以在 Apple Silicon Mac 上运行，也可以�
 
 完整代码位于 [koljahuang/laya-local](https://github.com/koljahuang/laya-local)，包含本地 FastAPI 服务、SageMaker 自定义容器和部署验证记录。
 
-## 为什么 typed-decision 模型开始进入基础设施
+## typed-decision 模型大有前途
 
 企业系统里的许多模型调用，其实只需要一个可执行的判断：工具选哪个，工单发给谁，内容要不要拦截，任务该继续还是停止。现在通常由生成式模型返回 JSON，应用再负责解析和校验。这个办法能用，但多走了文本生成这一步，也把格式错误带进了调用链。typed-decision 模型直接返回类型和值，代码可以据此执行规则。
 
@@ -24,10 +24,6 @@ Jev 让这一类模型进入了更多开发者的视野。[Vercel 在 2026 年 9
 | 评估与监控 | Agent 输出是否符合规则 | 记录评分、告警或加入回归集 |
 
 这类接口也不只服务于 AI 原生产品。企业系统中只要有“模型给出固定答案，代码决定下一步”的环节，就有接入位置。客服、风控、搜索、内容审核和内部自动化都可以复用同一份类型定义，不再针对不同模型编写不同的文本解析逻辑。
-
-它与 MCP 解决的是两段不同的接口。[Anthropic 在 2024 年发布 MCP](https://www.anthropic.com/news/model-context-protocol)，统一 AI 应用连接数据源和工具的方式；typed decision 约束模型交给业务代码的判断结果。Jev 发布后，模型网关、云平台和评估工具相继补上接口，这条扩散路径与 MCP 早期相似。现阶段还没有证据表明两者的采用规模相当。
-
-标题中的 `SELF HOST "Jev"` 指的是功能定位。Laya 没有使用 Jev 权重或 Jev API，但提供同类的 `choice`、`score` 和 `noul` 接口。它的区别在于开放权重，模型和端点可以部署在企业自己的 AWS 账户中。
 
 ## Laya 如何表达决策
 
@@ -194,7 +190,7 @@ FastAPI 自动生成 OpenAPI 文档，便于在浏览器中检查请求和响应
 
 ## 在 Amazon SageMaker AI 上完成部署验证
 
-FastAPI 服务按 Amazon SageMaker AI 自定义推理容器协议进行适配。根据 [Amazon SageMaker AI 自定义推理容器文档](https://docs.aws.amazon.com/sagemaker/latest/dg/adapt-inference-container.html)，容器监听 8080 端口，并提供 `/ping` 与 `/invocations` 接口。
+为了接入 Amazon SageMaker AI 实时端点，FastAPI 服务被封装为自定义推理容器：容器监听 8080 端口，以 `/ping` 响应健康检查，通过 `/invocations` 接收推理请求。
 
 镜像使用 Linux `amd64`、Python 3.12、CPU 版 PyTorch 2.14 和 Laya 0.3.5。multilingual checkpoint 固定在 `/opt/ml/model`，容器启动时不访问 Hugging Face。这样验证起来省事，代价是镜像较大：本地约 1.92 GB，推送到 Amazon Elastic Container Registry（Amazon ECR）后约 963 MB。
 
@@ -221,6 +217,43 @@ FastAPI 服务按 Amazon SageMaker AI 自定义推理容器协议进行适配。
 4. 等待 Endpoint 进入 `InService`；
 5. 使用相同的中文请求调用 Endpoint 三次；
 6. 检查 CloudWatch 日志与指标。
+
+### 使用仓库脚本完成部署
+
+仓库中的 [`sagemaker/manage.sh`](https://github.com/koljahuang/laya-local/tree/main/sagemaker) 把上述流程整理成了可执行命令。运行前需要准备 AWS CLI v2、Docker buildx、`uv`，以及一个允许 `sagemaker.amazonaws.com` 代入并能读取 ECR 镜像的 SageMaker 执行角色。脚本不会创建或删除这个角色，以免修改企业现有的 IAM 配置。
+
+在仓库根目录设置区域、CLI profile 和执行角色：
+
+```bash
+export AWS_PROFILE=<profile-name>                 # 使用默认凭证链时可省略
+export AWS_REGION=us-west-2
+export SAGEMAKER_ROLE_ARN=arn:aws:iam::<account-id>:role/<sagemaker-role>
+
+chmod +x sagemaker/manage.sh
+./sagemaker/manage.sh deploy
+```
+
+`deploy` 会下载 multilingual checkpoint，构建 `linux/amd64` 镜像，创建或复用 ECR 仓库，然后依次创建 Model、Endpoint Configuration 和 Endpoint。Endpoint 进入 `InService` 后，可以直接调用样例请求：
+
+```bash
+./sagemaker/manage.sh status
+./sagemaker/manage.sh invoke
+./sagemaker/manage.sh logs 10m
+```
+
+默认请求保存在 `sagemaker/request.json`，响应写入 `/tmp/laya-sagemaker-response.json`。资源名称和镜像信息保存在本地 `sagemaker/.deployment.env`，该文件已被 Git 忽略。生产构建还可以通过 `LAYA_MODEL_REVISION` 固定 Hugging Face commit。
+
+实时 Endpoint 会按实例运行时间计费。验证结束后应及时删除，下面的命令默认保留 ECR 仓库：
+
+```bash
+./sagemaker/manage.sh cleanup
+```
+
+如果 ECR 镜像也不再需要，应改用：
+
+```bash
+DELETE_ECR_REPOSITORY=1 ./sagemaker/manage.sh cleanup
+```
 
 三次调用返回完全一致的结构化判断：`department=billing`，对应概率 0.9938；`urgency=1.3578`；`churn_risk=0.0654`；`refund_requested=0.9945`。这一结果只能说明容器与托管调用链工作正常，不能替代业务数据集评估。
 
@@ -289,7 +322,6 @@ Laya 的模型卡列出了具体限制。基础 checkpoint 在特定 typed-decis
 4. [TypeSafe AI's Jev now available on Vercel AI Gateway](https://vercel.com/changelog/typesafe-ai-jev-now-available-on-ai-gateway)
 5. [Jev on Cloudflare AI](https://developers.cloudflare.com/ai/models/typesafe/jev/)
 6. [Jev is now available in LangSmith Evals](https://www.langchain.com/blog/jev-is-now-available-in-langsmith-evals)
-7. [Introducing the Model Context Protocol](https://www.anthropic.com/news/model-context-protocol)
-8. [Adapt your own inference container for Amazon SageMaker AI](https://docs.aws.amazon.com/sagemaker/latest/dg/adapt-inference-container.html)
-9. [Deploy models for real-time inference](https://docs.aws.amazon.com/sagemaker/latest/dg/realtime-endpoints-deploy-models.html)
-10. [Amazon SageMaker AI metrics in Amazon CloudWatch](https://docs.aws.amazon.com/sagemaker/latest/dg/monitoring-cloudwatch.html)
+7. [Adapt your own inference container for Amazon SageMaker AI](https://docs.aws.amazon.com/sagemaker/latest/dg/adapt-inference-container.html)
+8. [Deploy models for real-time inference](https://docs.aws.amazon.com/sagemaker/latest/dg/realtime-endpoints-deploy-models.html)
+9. [Amazon SageMaker AI metrics in Amazon CloudWatch](https://docs.aws.amazon.com/sagemaker/latest/dg/monitoring-cloudwatch.html)

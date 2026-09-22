@@ -1,28 +1,35 @@
 from __future__ import annotations
 
+import os
 import shutil
 from pathlib import Path
 
 from huggingface_hub import snapshot_download
 
 ROOT = Path(__file__).resolve().parent
-DESTINATION = ROOT / "model"
+DESTINATION = Path(os.getenv("LAYA_MODEL_DESTINATION", str(ROOT / "model"))).expanduser().resolve()
+MODEL_ID = os.getenv("LAYA_MODEL", "convaiinnovations/laya")
+SUBFOLDER = os.getenv("LAYA_SUBFOLDER", "multilingual").strip()
+REVISION = os.getenv("LAYA_MODEL_REVISION", "").strip() or None
+LOCAL_FILES_ONLY = os.getenv("HF_HUB_OFFLINE", "0").lower() in {"1", "true", "yes"}
 
+prefix = f"{SUBFOLDER}/" if SUBFOLDER else ""
 snapshot = Path(
     snapshot_download(
-        "convaiinnovations/laya",
+        MODEL_ID,
+        revision=REVISION,
         allow_patterns=[
-            "multilingual/rl_agent_config.json",
-            "multilingual/model.safetensors",
-            "multilingual/tokenizer/*",
-            "multilingual/encoder/*",
+            prefix + "rl_agent_config.json",
+            prefix + "model.safetensors",
+            prefix + "tokenizer/*",
+            prefix + "encoder/*",
         ],
-        local_files_only=True,
+        local_files_only=LOCAL_FILES_ONLY,
     )
 )
-source = snapshot / "multilingual"
+source = snapshot / SUBFOLDER if SUBFOLDER else snapshot
 if not source.is_dir():
-    raise SystemExit(f"Multilingual checkpoint not found in local cache: {source}")
+    raise SystemExit(f"Checkpoint directory not found: {source}")
 
 try:
     if DESTINATION.exists():

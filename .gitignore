@@ -8,6 +8,7 @@ __pycache__/
 .DS_Store
 sagemaker/model/
 sagemaker/*.tar.gz
+sagemaker/.deployment.env
 
 # Local blog submission files
 /docs/aws-blog/laya-aws-blog.docx

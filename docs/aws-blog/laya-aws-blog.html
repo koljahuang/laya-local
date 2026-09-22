@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Laya 非自回归决策服务：本地验证与 Amazon SageMaker AI 部署实践
-[SELF HOST &quot;Jev&quot;]</title>
+  <title>Laya 非自回归决策服务：本地验证与 Amazon SageMaker AI
+部署实践</title>
   <style>
 
 html {
@@ -256,13 +256,12 @@ nav#TOC::before { content:"目录"; display:block; font-weight:700; color:var(--
 <body>
 <nav id="TOC" role="doc-toc">
 <ul>
-<li><a href="#laya-非自回归决策服务本地验证与-amazon-sagemaker-ai-部署实践-self-host-jev" id="toc-laya-非自回归决策服务本地验证与-amazon-sagemaker-ai-部署实践-self-host-jev">Laya
-非自回归决策服务：本地验证与 Amazon SageMaker AI 部署实践 [SELF HOST
-“Jev”]</a>
+<li><a href="#laya-非自回归决策服务本地验证与-amazon-sagemaker-ai-部署实践" id="toc-laya-非自回归决策服务本地验证与-amazon-sagemaker-ai-部署实践">Laya
+非自回归决策服务：本地验证与 Amazon SageMaker AI 部署实践</a>
 <ul>
 <li><a href="#摘要" id="toc-摘要">摘要</a></li>
-<li><a href="#为什么-typed-decision-模型开始进入基础设施" id="toc-为什么-typed-decision-模型开始进入基础设施">为什么
-typed-decision 模型开始进入基础设施</a></li>
+<li><a href="#typed-decision-模型大有前途" id="toc-typed-decision-模型大有前途">typed-decision
+模型大有前途</a></li>
 <li><a href="#laya-如何表达决策" id="toc-laya-如何表达决策">Laya
 如何表达决策</a></li>
 <li><a href="#本地服务的组成" id="toc-本地服务的组成">本地服务的组成</a></li>
@@ -281,9 +280,8 @@ SageMaker AI</a></li>
 </ul></li>
 </ul>
 </nav>
-<h1 id="laya-非自回归决策服务本地验证与-amazon-sagemaker-ai-部署实践-self-host-jev">Laya
-非自回归决策服务：本地验证与 Amazon SageMaker AI 部署实践 [SELF HOST
-“Jev”]</h1>
+<h1 id="laya-非自回归决策服务本地验证与-amazon-sagemaker-ai-部署实践">Laya
+非自回归决策服务：本地验证与 Amazon SageMaker AI 部署实践</h1>
 <p><strong>关键词：</strong> Laya、Jev、typed
 decision、非自回归模型、FastAPI、Amazon SageMaker AI、模型推理</p>
 <h2 id="摘要">摘要</h2>
@@ -295,8 +293,7 @@ decision、非自回归模型、FastAPI、Amazon SageMaker AI、模型推理</p>
 CloudWatch 指标。</p>
 <p>完整代码位于 <a href="https://github.com/koljahuang/laya-local">koljahuang/laya-local</a>，包含本地
 FastAPI 服务、SageMaker 自定义容器和部署验证记录。</p>
-<h2 id="为什么-typed-decision-模型开始进入基础设施">为什么
-typed-decision 模型开始进入基础设施</h2>
+<h2 id="typed-decision-模型大有前途">typed-decision 模型大有前途</h2>
 <p>企业系统里的许多模型调用，其实只需要一个可执行的判断：工具选哪个，工单发给谁，内容要不要拦截，任务该继续还是停止。现在通常由生成式模型返回
 JSON，应用再负责解析和校验。这个办法能用，但多走了文本生成这一步，也把格式错误带进了调用链。typed-decision
 模型直接返回类型和值，代码可以据此执行规则。</p>
@@ -349,16 +346,6 @@ AI</a> 提供了 <code>typesafe/jev</code> 模型接口；五天后，<a href="h
 </table>
 <p>这类接口也不只服务于 AI
 原生产品。企业系统中只要有“模型给出固定答案，代码决定下一步”的环节，就有接入位置。客服、风控、搜索、内容审核和内部自动化都可以复用同一份类型定义，不再针对不同模型编写不同的文本解析逻辑。</p>
-<p>它与 MCP 解决的是两段不同的接口。<a href="https://www.anthropic.com/news/model-context-protocol">Anthropic
-在 2024 年发布 MCP</a>，统一 AI 应用连接数据源和工具的方式；typed
-decision 约束模型交给业务代码的判断结果。Jev
-发布后，模型网关、云平台和评估工具相继补上接口，这条扩散路径与 MCP
-早期相似。现阶段还没有证据表明两者的采用规模相当。</p>
-<p>标题中的 <code>SELF HOST &quot;Jev&quot;</code> 指的是功能定位。Laya 没有使用
-Jev 权重或 Jev API，但提供同类的 <code>choice</code>、<code>score</code>
-和 <code>noul</code>
-接口。它的区别在于开放权重，模型和端点可以部署在企业自己的 AWS
-账户中。</p>
 <h2 id="laya-如何表达决策">Laya 如何表达决策</h2>
 <p><a href="https://huggingface.co/convaiinnovations/laya">Laya</a>
 是一个开源的非自回归决策模型。它接收文本、邮件、工单或 JSON
@@ -543,10 +530,9 @@ checkpoint 改变。</p>
 秒，1280×720，H.264。</em></p>
 <h2 id="在-amazon-sagemaker-ai-上完成部署验证">在 Amazon SageMaker AI
 上完成部署验证</h2>
-<p>FastAPI 服务按 Amazon SageMaker AI 自定义推理容器协议进行适配。根据
-<a href="https://docs.aws.amazon.com/sagemaker/latest/dg/adapt-inference-container.html">Amazon
-SageMaker AI 自定义推理容器文档</a>，容器监听 8080 端口，并提供
-<code>/ping</code> 与 <code>/invocations</code> 接口。</p>
+<p>为了接入 Amazon SageMaker AI 实时端点，FastAPI
+服务被封装为自定义推理容器：容器监听 8080 端口，以 <code>/ping</code>
+响应健康检查，通过 <code>/invocations</code> 接收推理请求。</p>
 <p>镜像使用 Linux <code>amd64</code>、Python 3.12、CPU 版 PyTorch 2.14
 和 Laya 0.3.5。multilingual checkpoint 固定在
 <code>/opt/ml/model</code>，容器启动时不访问 Hugging
@@ -612,6 +598,37 @@ Elastic Container Registry（Amazon ECR）后约 963 MB。</p>
 <li>使用相同的中文请求调用 Endpoint 三次；</li>
 <li>检查 CloudWatch 日志与指标。</li>
 </ol>
+<h3 id="使用仓库脚本完成部署">使用仓库脚本完成部署</h3>
+<p>仓库中的 <a href="https://github.com/koljahuang/laya-local/tree/main/sagemaker"><code>sagemaker/manage.sh</code></a>
+把上述流程整理成了可执行命令。运行前需要准备 AWS CLI v2、Docker
+buildx、<code>uv</code>，以及一个允许
+<code>sagemaker.amazonaws.com</code> 代入并能读取 ECR 镜像的 SageMaker
+执行角色。脚本不会创建或删除这个角色，以免修改企业现有的 IAM 配置。</p>
+<p>在仓库根目录设置区域、CLI profile 和执行角色：</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">AWS_PROFILE</span><span class="op">=&lt;</span>profile-name<span class="op">&gt;</span>                 <span class="co"># 使用默认凭证链时可省略</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">AWS_REGION</span><span class="op">=</span>us-west-2</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">SAGEMAKER_ROLE_ARN</span><span class="op">=</span>arn:aws:iam::<span class="op">&lt;</span>account-id<span class="op">&gt;</span>:role/<span class="op">&lt;</span>sagemaker-role<span class="op">&gt;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x sagemaker/manage.sh</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="ex">./sagemaker/manage.sh</span> deploy</span></code></pre></div>
+<p><code>deploy</code> 会下载 multilingual checkpoint，构建
+<code>linux/amd64</code> 镜像，创建或复用 ECR 仓库，然后依次创建
+Model、Endpoint Configuration 和 Endpoint。Endpoint 进入
+<code>InService</code> 后，可以直接调用样例请求：</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./sagemaker/manage.sh</span> status</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./sagemaker/manage.sh</span> invoke</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">./sagemaker/manage.sh</span> logs 10m</span></code></pre></div>
+<p>默认请求保存在 <code>sagemaker/request.json</code>，响应写入
+<code>/tmp/laya-sagemaker-response.json</code>。资源名称和镜像信息保存在本地
+<code>sagemaker/.deployment.env</code>，该文件已被 Git
+忽略。生产构建还可以通过 <code>LAYA_MODEL_REVISION</code> 固定 Hugging
+Face commit。</p>
+<p>实时 Endpoint
+会按实例运行时间计费。验证结束后应及时删除，下面的命令默认保留 ECR
+仓库：</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./sagemaker/manage.sh</span> cleanup</span></code></pre></div>
+<p>如果 ECR 镜像也不再需要，应改用：</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="va">DELETE_ECR_REPOSITORY</span><span class="op">=</span>1 <span class="ex">./sagemaker/manage.sh</span> cleanup</span></code></pre></div>
 <p>三次调用返回完全一致的结构化判断：<code>department=billing</code>，对应概率
 0.9938；<code>urgency=1.3578</code>；<code>churn_risk=0.0654</code>；<code>refund_requested=0.9945</code>。这一结果只能说明容器与托管调用链工作正常，不能替代业务数据集评估。</p>
 <p>本地通过 AWS CLI 观察到的端到端耗时为 2.09–2.96 秒，其中包含本地 CLI
@@ -711,8 +728,6 @@ AI’s Jev now available on Vercel AI Gateway</a></li>
 Cloudflare AI</a></li>
 <li><a href="https://www.langchain.com/blog/jev-is-now-available-in-langsmith-evals">Jev
 is now available in LangSmith Evals</a></li>
-<li><a href="https://www.anthropic.com/news/model-context-protocol">Introducing
-the Model Context Protocol</a></li>
 <li><a href="https://docs.aws.amazon.com/sagemaker/latest/dg/adapt-inference-container.html">Adapt
 your own inference container for Amazon SageMaker AI</a></li>
 <li><a href="https://docs.aws.amazon.com/sagemaker/latest/dg/realtime-endpoints-deploy-models.html">Deploy

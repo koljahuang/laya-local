@@ -1,0 +1,35 @@
+{
+  "state": {
+    "account_tier": "enterprise",
+    "message": "我在订单 A-104 中被重复扣款。请今天退款，否则我们将取消服务。"
+  },
+  "questions": {
+    "department": {
+      "type": "choice",
+      "instructions": "哪个团队应该处理这条消息？",
+      "criteria": {
+        "billing": "账单、付款和退款",
+        "technical": "故障和系统异常",
+        "sales": "价格与合同",
+        "other": "其他问题"
+      }
+    },
+    "urgency": {
+      "type": "score",
+      "instructions": "这个请求有多紧急？",
+      "criteria": [
+        "不紧急",
+        "需要尽快处理",
+        "阻塞或有明确最后期限"
+      ]
+    },
+    "churn_risk": {
+      "type": "noul",
+      "instructions": "客户是否威胁取消服务或离开？"
+    },
+    "refund_requested": {
+      "type": "noul",
+      "instructions": "客户是否明确要求退款？"
+    }
+  }
+}
