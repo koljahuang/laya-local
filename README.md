@@ -11,8 +11,11 @@
 
 ## 首次安装
 
+开始前需要准备 Git 和 [`uv`](https://docs.astral.sh/uv/getting-started/installation/)。`setup.sh` 会通过 `uv` 准备 Python，但不会安装 `uv` 本身。
+
 ```bash
-cd /Users/kolya/kolya-projects/laya-local
+git clone https://github.com/koljahuang/laya-local.git
+cd laya-local
 chmod +x scripts/setup.sh scripts/run.sh
 ./scripts/setup.sh
 ```
@@ -29,7 +32,6 @@ chmod +x scripts/setup.sh scripts/run.sh
 ## 启动
 
 ```bash
-cd /Users/kolya/kolya-projects/laya-local
 ./scripts/run.sh
 ```
 
@@ -69,6 +71,17 @@ curl -s http://127.0.0.1:7860/predict \
 ```bash
 uv run python scripts/smoke_test.py
 ```
+
+## Amazon SageMaker AI
+
+`sagemaker/` 提供实时端点所需的自定义容器适配：
+
+- `serve.py`：监听 8080 端口，提供 `/ping` 和 `/invocations`；
+- `Dockerfile`：构建 `linux/amd64` CPU 推理镜像；
+- `prepare_model.py`：把 Hugging Face checkpoint 准备到容器构建目录；
+- `validation-report.md`：记录 `ml.m5.xlarge` 端点的验证结果和 CloudWatch 指标。
+
+模型权重、临时压缩包和本地缓存不会提交到 Git。部署过程与验证结果见 [Laya 部署实践](docs/aws-blog/laya-aws-blog.md)。
 
 ## 配置
 

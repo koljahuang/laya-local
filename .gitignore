@@ -2,5 +2,14 @@
 .cache/
 __pycache__/
 *.py[cod]
+.pytest_cache/
+.ruff_cache/
 .env
 .DS_Store
+sagemaker/model/
+sagemaker/*.tar.gz
+
+# Local blog submission files
+/docs/aws-blog/laya-aws-blog.docx
+/docs/aws-blog/laya-aws-blog-delivery.zip
+/docs/aws-blog/submission-checklist.md

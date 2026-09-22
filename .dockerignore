@@ -1,0 +1,6 @@
+**
+!sagemaker/
+!sagemaker/Dockerfile
+!sagemaker/serve.py
+!sagemaker/model/
+!sagemaker/model/**
